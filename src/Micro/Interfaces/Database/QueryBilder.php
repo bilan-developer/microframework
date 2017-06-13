@@ -1,0 +1,106 @@
+<?php
+
+namespace Bilan\Micro\Interfaces\Database;
+
+/**
+ * Описывает интерфейс для QueryBilder.
+ */
+interface QueryBilder
+{
+    /**
+     * Определяем тип запроса как SELECT.
+     *
+     * @return QueryBilder
+     */
+    public function select();
+
+    /**
+     * Определяем тип запроса как INSERT.
+     *
+     * @return QueryBilder
+     */
+    public function insert();
+
+    /**
+     * Определяем тип запроса как UPDATE.
+     *
+     * @return QueryBilder
+     */
+    public function update();
+
+    /**
+     * Устанавливаем таблицу в которой будет производиться запрос.
+     * На данный момент предполагается,
+     * что выборка будет производится из одной таблицы.
+     *
+     * @param string $table
+     *
+     * @return QueryBilder
+     */
+    public function table($table, $aliases = null);
+
+    /**
+     * Формирование полей, которые будут участвовать в запросе.
+     *
+     * @param array $columns
+     *
+     * @throws \Exception Неверный параметр.
+     *
+     * @return QueryBilder
+     */
+    public function columns($columns);
+
+    /**
+     * Формирование условий, которые будут участвовать в запросе.
+     *
+     * @param array $conditions
+     *
+     * @return QueryBilder
+     */
+    public function where($conditions);
+
+    /**
+     * Формирование значений для записи\обновления, которые будут участвовать в запросе.
+     *
+     * @param array $value
+     *
+     * @return QueryBilder
+     */
+    public function set($value);
+
+    /**
+     * Устанавливаем сортировку
+     *
+     * @param string $order
+     *
+     * @return QueryBilder
+     */
+    public function orderBy($order);
+
+    /**
+     * Устанавливаем лимит.
+     *
+     * @param int $arg1
+     * @param int $arg2
+     *
+     * @return QueryBilder
+     */
+    public function limit($arg1, $arg2 = null);
+
+    /**
+     * Устанавливаем LIKE.
+     *
+     * @param string $like
+     *
+     * @return QueryBilder
+     */
+    public function like($field, $like);
+
+    /**
+     * Построение строки SQL-запроса
+     *
+     * @return string
+     */
+    public function bild(): string;
+
+}

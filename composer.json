@@ -1,0 +1,29 @@
+{
+    "name": "bilzn/microframework",
+    "description": "microframework",
+    "authors": [
+        {
+            "name": "Sasha Bilan",
+            "email": "hagrida@yandex.ru"
+        }
+    ],
+    "require": {
+        "nikic/fast-route": "^1.2",
+        "phly/http": "^0.14.1",
+        "zendframework/zend-diactoros": "^1.4",
+        "philo/laravel-blade": "^3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bilan\\": "src/"
+        },
+        "files": [
+            "src/Helpers/helper.php"
+        ]
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.2",
+        "symfony/var-dumper": "^3.3",
+        "phpdocumentor/phpdocumentor": "^2.9"
+    }
+}

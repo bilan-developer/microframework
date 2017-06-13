@@ -1,0 +1,84 @@
+<?php
+namespace Bilan\Micro\Interfaces\Model;
+
+/**
+ * Описывает интерфейс работы модели.
+ */
+interface Model
+{
+    /**
+     * Получаем модель из бд.
+     *
+     * @param int|array $id
+     *
+     * @return Model|Model[]
+     */
+    public function find($id);
+
+    /**
+     * Сохраняем модель, (insert or create), в случае успеха вернем true.
+     *
+     * @return bool
+     */
+    public function save();
+
+    /**
+     * Обновляем модель.
+     *
+     * @return void
+     */
+    public function refresh();
+
+    /**
+     * Удаляем модель, в случае успеха вернем true.
+     *
+     * @return true
+     */
+    public function delete();
+
+    /**
+     * Получаем все модели из таблицы.
+     *
+     * @return Model[]
+     */
+    public function all();
+
+    /**
+     * Заполняем модель данными.
+     *
+     * @param array $attributes
+     *
+     * @return Model
+     */
+    public function fill(array $attributes);
+
+    /**
+     * Получаем все свойства модели.
+     *
+     * @return array
+     */
+    public function getAttributes();
+
+    /**
+     * Получаем название таблицы модели.
+     *
+     * @return string
+     */
+    public function getTable();
+
+    /**
+     * Получаем ключи атрибутов.
+     *
+     * @return array
+     */
+    public function getKey();
+
+    /**
+     * Устанавливаем название таблицы модели.
+     *
+     * @param string $table
+     *
+     * @return void
+     */
+    public function setTable($table);
+}

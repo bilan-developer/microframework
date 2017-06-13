@@ -1,0 +1,48 @@
+<?php
+namespace Bilan\Micro\Event;
+
+use Bilan\Micro\Interfaces\Event\EventManager as EventManagerInterface;
+
+
+class EventManager implements EventManagerInterface
+{
+
+    /**
+     * Обработчики событий
+     *
+     * @var array
+     */
+    protected $events = [];
+
+    /**
+     * Добавляем обработчик события.
+     *
+     * @param string   $event
+     * @param callable $callback
+     *
+     * @return mixed
+     */
+    public function listen($event, $callback)
+    {
+        $this->events[$event][] = $callback;
+    }
+
+    /**
+     * Вызываем все обработчики для указанного события.
+     *
+     * @param string $event
+     * @param mixed  $payload
+     *
+     * @return bool
+     */
+    public function fire($event, $payload)
+    {
+        if(!$this->events[$event]) return false;
+        foreach ($this->events[$event] as $e) {
+            return $e($payload);
+            if( !$e($payload) ) return false; //break;
+        }
+        return true;
+
+    }
+}

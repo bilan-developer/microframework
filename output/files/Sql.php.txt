@@ -1,0 +1,60 @@
+<?php
+
+namespace Bilan;
+
+use Bilan\Interfaces\QueryBuilderInterface;
+
+class Sql implements QueryBuilderInterface
+{
+    /**
+     * @var object
+     */
+    protected $pdo;
+
+    /**
+     * @var string
+     */
+    protected $table;
+
+    /**
+    * Формированиестроки запроса на запись.
+    *
+    * @return 
+    */
+    public function insertTable($date)
+    {
+        $this->pdo->prepare( "INSERT INTO $this->table VALUES (?,?)" )->execute($date);
+    }
+    /**
+     * Формированиестроки запроса на запись.
+     *
+     * @return array
+     */
+    public function selectTable($date)
+    {
+        $sth = $this->pdo->prepare("SELECT ?, ? FROM $this->table");
+        $sth->execute($date);
+        $red = $sth->fetchAll();
+        return $red;
+    }
+
+    /**
+     * Присвоениие значения переменной $pdo.
+     *
+     * @param object $conectionPDO
+     * @return void
+     */
+    public function setPDO($conectionPDO){
+        $this->pdo = $conectionPDO;
+    }
+
+    /**
+     * Присвоениие значения переменной $table.
+     *
+     * @param object $tableName
+     * @return void
+     */
+    public function setTbleName($tableName){
+        $this->table = $tableName;
+    }
+}

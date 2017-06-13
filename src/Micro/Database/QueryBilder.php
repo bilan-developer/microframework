@@ -1,0 +1,338 @@
+<?php
+namespace  Bilan\Micro\Database;
+
+use Bilan\Micro\Interfaces\Database\QueryBilder as QueryBilderInterface;
+
+class QueryBilder implements QueryBilderInterface
+{
+    /**
+     * @var string SELECT
+     */
+    const SELECT = 'SELECT';
+
+    /**
+     * @var string DELETE
+     */
+    const DELETE = 'DELETE';
+
+    /**
+     * @var string INSERT INTO
+     */
+    const INSERT = 'INSERT INTO';
+
+    /**
+     * @var string UPDATE
+     */
+    const UPDATE = 'UPDATE';
+
+    /**
+     * Тип запроса (SELECT, INSERT, UPDATE, DELETE).
+     *
+     * @var string $typeQuery.
+     */
+    protected $typeQuery = null;
+
+    /**
+     * Поля, участвующие в запросе.
+     *
+     * @var string $columns
+     */
+    protected $columns = ['*'];
+
+    /**
+     * Таблица для запроса
+     *
+     * @var string $table.
+     */
+    protected $table = null;
+
+    /**
+     * Условия для запроса.
+     *
+     * @var string $where
+     */
+    protected $where = null;
+
+    /**
+     * Значения для вставки\обновления для запроса.
+     *
+     * @var string $set
+     */
+    protected $set = null;
+
+    /**
+     * Тип и полe для сортировки.
+     *
+     * @var string $orderBy
+     */
+    protected $orderBy = null;
+
+    /**
+     * Лимит.
+     *
+     * @var string $limit
+     */
+    protected $limit = null;
+
+    /**
+     * JOIN.
+     *
+     * @var string $join
+     */
+    protected $join = null;
+
+    /**
+     * Параметры, для подстановки в Еxecute.
+     *
+     * @var array $paramForExecute
+     */
+    public $paramForExecute = [];
+
+    /**
+     * Определяем тип запроса как SELECT.
+     *
+     * @return QueryBilder
+     */
+    public function select()
+    {
+        $this->reset();
+        $this->typeQuery = self::SELECT;
+        return $this;
+    }
+
+    /**
+     * Определяем тип запроса как INSERT.
+     *
+     * @return QueryBilder
+     */
+    public function insert()
+    {
+        $this->reset();
+        $this->typeQuery = self::INSERT;
+        return $this;
+    }
+
+    /**
+     * Определяем тип запроса как UPDATE.
+     *
+     * @return QueryBilder
+     */
+    public function update()
+    {
+        $this->reset();
+        $this->typeQuery = self::UPDATE;
+        return $this;
+    }
+
+    /**
+     * Определяем тип запроса как UPDATE.
+     *
+     * @return QueryBilder
+     */
+    public function delete()
+    {
+        $this->reset();
+        $this->typeQuery = self::DELETE;
+        return $this;
+    }
+
+    /**
+     * Устанавливаем таблицу в которой будет производиться запрос.
+     * На данный момент предполагается,
+     * что выборка будет производится из одной таблицы.
+     *
+     * @param string $table
+     *
+     * @return QueryBilder
+     */
+    public function table($table, $aliases = null)
+    {
+        $this->table = sprintf(' `%s`', $table);
+        if (!empty($aliases)) {
+            $this->table .= ' AS ' . $aliases;
+        }
+        return $this;
+    }
+
+    /**
+     * Формирование полей, которые будут участвовать в запросе.
+     *
+     * @param array $columns
+     *
+     * @throws \Exception Неверный параметр.
+     *
+     * @return QueryBilder
+     */
+    public function columns($columns)
+    {
+        if(is_array($columns)){
+            $this->columns = implode(', ', $columns);
+        }else{
+            throw new \Exception('Неверный параметр' . $columns);
+        }
+        return $this;
+    }
+
+    /**
+     * Формирование условий, которые будут участвовать в запросе.
+     *
+     * @param array $conditions
+     *
+     * @return QueryBilder
+     */
+    public function where($conditions)
+    {
+        foreach ($conditions as $field => $value) {
+            // Если указана таблица для поля, то получим чистое имя поля
+            if (mb_strpos($field, '.')) {
+                $fildName = explode('.', $field)[1];
+            }else{
+                $fildName = $field;
+            }
+            $columns[] = sprintf('%s = :%s', $field, $fildName);
+            $this->paramForExecute[sprintf(':%s', $fildName)] = $value;
+        }
+        $this->where = ' WHERE ' . implode(' AND ', $columns);
+        return $this;
+    }
+
+    /**
+     * Формирование значений для записи\обновления, которые будут участвовать в запросе.
+     *
+     * @param array $value
+     *
+     * @return QueryBilder
+     */
+    public function set($value)
+    {
+        foreach ($value as $field => $value) {
+            $set[] = sprintf('%s = :%s', $field, $field);
+            $this->paramForExecute[sprintf(':%s', $field)] = $value;
+        }
+        $this->set = ' SET ' . implode(' , ', $set);
+        return $this;
+    }
+
+    /**
+     * Устанавливаем сортировку
+     *
+     * @param string $order
+     *
+     * @return QueryBilder
+     */
+    public function orderBy($order)
+    {
+        $this->orderBy = sprintf(' ORDER BY %s ', $order);
+        return $this;
+    }
+
+    /**
+     * Устанавливаем лимит.
+     *
+     * @param int $arg1
+     * @param int $arg2
+     *
+     * @return QueryBilder
+     */
+    public function limit($arg1, $arg2 = null)
+    {
+        if ($arg2) {
+            $start = $arg1;
+            $limit = $arg2;
+            $this->limit = sprintf(' LIMIT %s,%s ', $start, $limit);
+        }else{
+            $limit = $arg1;
+            $this->limit = sprintf(' LIMIT %s ', $limit);
+        }
+        return $this;
+    }
+
+    /**
+     * Устанавливаем LIKE.
+     *
+     * @param string $like
+     *
+     * @return QueryBilder
+     */
+    public function like($field, $like)
+    {
+        // В данном случе чтобы добавить два лайка  нужно его вызвать 2 раза
+        // хорошо бы переделать на массив, но позже.
+        if($this->where){
+            $this->where .= ' AND ' . sprintf(" %s LIKE '%s' ", $field, $like);
+        }else{
+            $this->where .= ' WHERE ' . sprintf(" %s LIKE '%s' ", $field, $like);
+        }
+        return $this;
+    }
+
+    /**
+     * Устанавливаем JOIN.
+     *
+     * @param string $table
+     * @param array $where
+     * @param string $type
+     *
+     * @return QueryBilder
+     */
+    public function join($table, $where, $type = 'INNER')
+    {
+        foreach ($where as $firstParam => $secondParam) {
+            $whereArr[] = sprintf('%s = %s', $firstParam, $secondParam);
+        }
+        $this->join = ' ' . $type . ' JOIN ' . $table . ' ON ' . implode(' AND ', $whereArr);
+        return $this;
+    }
+
+    /**
+     * Построение строки SQL-запроса
+     *
+     * @throws \Exception Неверно построен запрос к базе данных: не указака операция.
+     *
+     * @return string
+     */
+    public function bild(): string
+    {
+
+        switch ($this->typeQuery) {
+            case self::SELECT:
+                return $this->typeQuery . ' ' . $this->columns . ' FROM ' .  $this->table . $this->join .
+                    tapQuery($this->where) . $this->orderBy . $this->limit;
+                break;
+            case self::INSERT:
+                return $this->typeQuery . ' ' . $this->table . $this->set;
+                break;
+
+            case self::UPDATE:
+                return $this->typeQuery . ' ' . $this->table . $this->set . tapQuery($this->where) .
+                    tapQuery($this->orderBy) . tapQuery($this->limit);
+                break;
+            case self::DELETE:
+                return $this->typeQuery . ' FROM ' . $this->table . tapQuery($this->where) .
+                    tapQuery($this->orderBy) . tapQuery($this->limit);
+                break;
+            default:
+                throw new \Exception('Неверно построен запрос к базе данных: не указака операция');
+                break;
+        }
+    }
+
+    /**
+     * Ресет значений QueryBilder для следующего запроса.
+     *
+     * @return void
+     */
+    protected function reset()
+    {
+        $this->typeQuery = null;
+        $this->columns = null;
+        $this->table = null;
+        $this->where = null;
+        $this->set = null;
+        $this->orderBy = null;
+        $this->limit = null;
+        $this->join = null;
+        $this->paramForExecute = [];
+        $this->columns = ['*'];
+    }
+}
